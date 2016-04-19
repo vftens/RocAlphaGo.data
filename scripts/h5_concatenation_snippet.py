@@ -2,67 +2,73 @@ import h5py
 import numpy as np
 import os
 
-def hdf5_cancate(hdf5_files, output, verbose=False):
-    # the file list
-    filenamelist = hdf5_files
-
+def hdf5_cancat(hdf5_files, output, verbose=False):
     # get data from exisitng files
     statesdata=[]
     actionsdata=[]
     meta=[]
-    for filename in filenamelist:
-        fileread  = h5py.File(filename, 'r')   # 'r' means that hdf5 file is open in read-only mode
-        status=fileread['states']
-        statesdata.append(status)
+    for filename in hdf5_files:
+        fileread = h5py.File(filename, 'r')   # 'r' means that hdf5 file is open in read-only mode
+        states = fileread['states']
+        statesdata.append(states)
         actionsdata.append(fileread['actions'])
         meta.append(fileread['file_offsets'])
 
     # get the dimensions of the new file
-    print(statesdata)
-    statelen=0
-    actionlen=0
-    metalen=0
-    for i in range(0, len(statesdata)):
-        statelen = statelen+statesdata[i].shape[0]
-        actionlen = actionlen+actionsdata[i].shape[0]
-        metalen = metalen+len(meta[i])
+    if verbose:
+        print(statesdata)
+    statelen = 0
+    actionlen = 0
+    metalen = 0
+    for i in range(len(statesdata)):
+        statelen = statelen + statesdata[i].shape[0]
+        actionlen = actionlen + actionsdata[i].shape[0]
+        metalen = metalen + len(meta[i])
+
+    assert(statelen == actionlen)
 
     # initialise the output
     tmp_file = os.path.join(os.path.dirname(output), ".tmp." + os.path.basename(output))
-    combined = h5py.File(tmp_file, 'w')   
-    states = combined.create_dataset(
-                    'states',
-                    dtype=np.uint8,
-                    shape=(statelen, statesdata[0].shape[1], statesdata[0].shape[2], statesdata[0].shape[3]),
-                    chunks=(64, statesdata[0].shape[1], statesdata[0].shape[2], statesdata[0].shape[3]),      # approximately 1MB chunks
-                    compression="lzf")
-    actions = combined.create_dataset(
-                    'actions',
-                    dtype=np.uint8,
-                    shape=(actionlen, 2),
-                    chunks=(64, 2),
-                    compression="lzf")
-    offsets = combined.create_group('offsets')
+    combined = h5py.File(tmp_file, 'w')
+    try:
+        states = combined.create_dataset(
+                        'states',
+                        dtype=np.uint8,
+                        shape=(statelen,) + statesdata[0].shape[1:],
+                        maxshape=(None,) + statesdata[0].shape[1:],
+                        chunks=(64,) + statesdata[0].shape[1:],      # approximately 1MB chunks
+                        compression="lzf")
+        actions = combined.create_dataset(
+                        'actions',
+                        dtype=np.uint8,
+                        shape=(actionlen, 2),
+                        maxshape=(None, 2),
+                        chunks=(1024, 2),
+                        compression="lzf")
+        offsets = combined.create_group('file_offsets')
 
-    # putting the data from separate file to the inialisation
-    start = 0
-    summation = 0
-    for i in range(0, len(statesdata)):
-        # put the states and actions to the inialisation
-        end = start + statesdata[i].shape[0]
-        metadata = meta[i]
+        # putting the data from separate file to the inialisation
+        start = 0
+        summed_offset = 0
+        for i in range(len(statesdata)):
+            # put the states and actions to the inialisation
+            end = start + statesdata[i].shape[0]
+            metadata = meta[i]
 
-        states[start:end] = statesdata[i]
-        actions[start:end] = actionsdata[i]
+            states[start:end] = statesdata[i]
+            actions[start:end] = actionsdata[i]
 
-        start += statesdata[i].shape[0]
+            start += statesdata[i].shape[0]
 
-        # put the file_offsets to the inialisation, with the total off_sets calculated
-        for keyitem,valueitem in metadata.iteritems():
-            offsets[keyitem] = [summation, valueitem.value[1]]
-            summation=summation+valueitem.value[1]
-    combined.close()
-    os.rename(tmp_file, output)
+            # put the file_offsets to the inialisation, with the total off_sets calculated
+            for filename_key, valueitem in metadata.iteritems():
+                offsets[filename_key] = [summed_offset, valueitem[1]]
+                summed_offset += valueitem[1]
+        combined.close()
+        os.rename(tmp_file, output)
+    except Exception as e:
+        os.remove(tmp_file)
+        raise e
 
 def run_cancat(cmd_line_args=None):
     """Run cancatenations. command-line args may be passed in as a list
@@ -74,8 +80,8 @@ def run_cancat(cmd_line_args=None):
         description='Cancatenate the generated hdf5 files',
         epilog="A directory containing the hdf5 files is needed")
     parser.add_argument("--outfile", "-o", help="Destination to write data (hdf5 file)", required=True)
-    parser.add_argument("--recurse", "-R", help="Set to recurse through directories searching for SGF files", default=False, action="store_true")
-    parser.add_argument("--directory", "-d", help="Directory containing SGF files to process. if not present, expects files from stdin", default=None)
+    parser.add_argument("--recurse", "-R", help="Set to recurse through directories searching for HDF5 files", default=False, action="store_true")
+    parser.add_argument("--directory", "-d", help="Directory containing HDF5 files to process. if not present, expects files from stdin", default=None)
     parser.add_argument("--verbose", "-v", help="Turn on verbose mode", default=False, action="store_true")
 
     if cmd_line_args is None:
@@ -110,12 +116,12 @@ def run_cancat(cmd_line_args=None):
         else:
             files = list(_list_hdf5s(args.directory))
     else:
-        files = list((f.strip() for f in sys.stdin if _is_hdf5(f))) 
+        files = list((f.strip() for f in sys.stdin if _is_hdf5(f)))
 
     if args.verbose:
         print "files", files
 
-    hdf5_cancate(files, args.outfile, verbose=args.verbose)
+    hdf5_cancat(files, args.outfile, verbose=args.verbose)
 
 if __name__ == '__main__':
     run_cancat()
