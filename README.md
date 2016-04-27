@@ -1,4 +1,4 @@
-# AlphaGo.data
+# RocAlphaGo.data
 
 Version controlled data for the [Rochester-NRT/AlphaGo](https://github.com/Rochester-NRT/AlphaGo) repository.
 
