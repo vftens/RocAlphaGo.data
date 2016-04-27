@@ -1,7 +1,7 @@
 *.sgf
 # explicitly ignoring datasets makes git process changes much faster
-expert_play/Community
-expert_play/GoGoDWinter2015
-expert_play/GoGoD-subset-20k
-expert_play/BadukMovies
-expert_play/kgs-subset-554
+expert_play/sgf/Community
+expert_play/sgf/GoGoDWinter2015
+expert_play/sgf/GoGoD-subset-20k
+expert_play/sgf/BadukMovies
+expert_play/sgf/kgs-subset-554
