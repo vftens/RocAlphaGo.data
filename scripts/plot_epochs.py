@@ -8,6 +8,11 @@ if len(sys.argv) > 1:
 		metadata = json.load(f)
 		n_epochs = len(metadata['epochs'])
 
+		if len(sys.argv) > 2:
+			prefix = sys.argv[2]
+		else:
+			prefix = ''
+
 		# LOSS PLOT
 
 		train_loss = [ep['loss'] for ep in metadata['epochs']]
@@ -17,8 +22,8 @@ if len(sys.argv) > 1:
 		plt.plot(range(n_epochs), train_loss)
 		plt.plot(range(n_epochs), val_loss)
 		plt.xlabel('epoch')
-		plt.legend(['train_loss', 'val_loss'])
-		plt.savefig('loss.png')
+		plt.legend(['train_loss', 'val_loss'], loc='upper right')
+		plt.savefig(prefix + 'loss.png')
 
 		# ACCURACY PLOT
 
@@ -29,7 +34,7 @@ if len(sys.argv) > 1:
 		plt.plot(range(n_epochs), train_acc)
 		plt.plot(range(n_epochs), val_acc)
 		plt.xlabel('epoch')
-		plt.legend(['train_acc', 'val_acc'])
-		plt.savefig('acc.png')
+		plt.legend(['train_acc', 'val_acc'], loc='lower right')
+		plt.savefig(prefix + 'acc.png')
 else:
 	print "usage: python plot_epochs.py METADATA_FILE"
