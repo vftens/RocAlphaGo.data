@@ -19,8 +19,8 @@ if len(sys.argv) > 1:
 		val_loss = [ep['val_loss'] for ep in metadata['epochs']]
 
 		plt.figure()
-		plt.plot(list(range(n_epochs)), train_loss)
-		plt.plot(list(range(n_epochs)), val_loss)
+		plt.plot(range(n_epochs), train_loss)
+		plt.plot(range(n_epochs), val_loss)
 		plt.xlabel('epoch')
 		plt.legend(['train_loss', 'val_loss'], loc='upper right')
 		plt.savefig(prefix + 'loss.png')
@@ -31,10 +31,10 @@ if len(sys.argv) > 1:
 		val_acc = [ep['val_acc'] for ep in metadata['epochs']]
 
 		plt.figure()
-		plt.plot(list(range(n_epochs)), train_acc)
-		plt.plot(list(range(n_epochs)), val_acc)
+		plt.plot(range(n_epochs), train_acc)
+		plt.plot(range(n_epochs), val_acc)
 		plt.xlabel('epoch')
 		plt.legend(['train_acc', 'val_acc'], loc='lower right')
 		plt.savefig(prefix + 'acc.png')
 else:
-	print("usage: python plot_epochs.py METADATA_FILE")
+	print "usage: python plot_epochs.py METADATA_FILE"

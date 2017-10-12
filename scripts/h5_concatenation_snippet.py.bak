@@ -61,7 +61,7 @@ def hdf5_cancat(hdf5_files, output, verbose=False):
             start += statesdata[i].shape[0]
 
             # put the file_offsets to the inialisation, with the total off_sets calculated
-            for filename_key, valueitem in metadata.items():
+            for filename_key, valueitem in metadata.iteritems():
                 offsets[filename_key] = [summed_offset, valueitem[1]]
                 summed_offset += valueitem[1]
         combined.close()
@@ -90,7 +90,7 @@ def run_cancat(cmd_line_args=None):
         args = parser.parse_args(cmd_line_args)
 
     if args.verbose:
-        print("directory", args.directory)
+        print "directory", args.directory
 
     def _is_hdf5(fname):
         return fname.strip()[-5:] == ".hdf5"
@@ -119,7 +119,7 @@ def run_cancat(cmd_line_args=None):
         files = list((f.strip() for f in sys.stdin if _is_hdf5(f)))
 
     if args.verbose:
-        print("files", files)
+        print "files", files
 
     hdf5_cancat(files, args.outfile, verbose=args.verbose)
 

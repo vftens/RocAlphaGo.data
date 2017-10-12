@@ -17,7 +17,7 @@ ls path/to/files | python skip.py 10 9 | processing_script
 import sys
 
 if len(sys.argv) < 3:
-	print(("usage:", sys.argv[0], "MOD OFFSET"))
+	print("usage:", sys.argv[0], "MOD OFFSET")
 
 mod = int(sys.argv[1])
 off = int(sys.argv[2])
